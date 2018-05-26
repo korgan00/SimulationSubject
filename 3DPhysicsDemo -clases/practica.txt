@@ -1,0 +1,6 @@
+
+* float/double typedef
+* rotaciones radianes vs angulos
+* quitar friccion bolas no ruedan ¿por que?
+* quitar iteraciones tiempo adaptativo
+

@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PhysicsDemoByCarlosPegar", "vs2010Project\vs2010Project.vcxproj", "{9622309B-FD07-47F0-A58C-134EC1AA6A65}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "thinkGlite", "..\..\thinkGlite\thinkGliteVS2012\thinkGlite.vcxproj", "{F5EDDB43-DC25-4978-BF3A-467B9D06A522}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9622309B-FD07-47F0-A58C-134EC1AA6A65}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9622309B-FD07-47F0-A58C-134EC1AA6A65}.Debug|Win32.Build.0 = Debug|Win32
+		{9622309B-FD07-47F0-A58C-134EC1AA6A65}.Release|Win32.ActiveCfg = Release|Win32
+		{9622309B-FD07-47F0-A58C-134EC1AA6A65}.Release|Win32.Build.0 = Release|Win32
+		{F5EDDB43-DC25-4978-BF3A-467B9D06A522}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F5EDDB43-DC25-4978-BF3A-467B9D06A522}.Debug|Win32.Build.0 = Debug|Win32
+		{F5EDDB43-DC25-4978-BF3A-467B9D06A522}.Release|Win32.ActiveCfg = Release|Win32
+		{F5EDDB43-DC25-4978-BF3A-467B9D06A522}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
