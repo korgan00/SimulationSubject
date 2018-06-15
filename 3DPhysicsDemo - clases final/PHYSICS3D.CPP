@@ -37,7 +37,7 @@ int FrictionActive = 1;
 const float restitution=0.7f;
 const float friction=0.3f;
 
-//NOTE: this is actually the accelaration of gavity in m/s2 , 
+//NOTE: this is actually the accelaration of gavity in m/s2, 
 // gravity force is G=g*M
 vector3D gravity(real(0),real(0),real(-20));
         
@@ -81,15 +81,55 @@ void dynamic_world::BuildWalls()
 void dynamic_world::BuildBodies( void )
 {
 	string String;
-
+	
+	int storedBoxes=0;//index to store the box for drawing 
     for(int i = 0; i < NumberOfBodies;i++)
     {
         rigid_body &Body = bodies[i];
 
-		Body.shape = SPHERE_SHAPE;
-//		Body.shape = BOX_SHAPE;
-	
-		if( Body.shape==SPHERE_SHAPE)
+		//Body.shape = SPHERE_SHAPE;
+		//Body.shape = BOX_SHAPE;
+
+		if (i == 2)
+		{
+			Body.shape = SPHERE_SHAPE;
+		}
+		else
+		{
+			Body.shape = BOX_SHAPE;
+		}
+
+		if (Body.shape == BOX_SHAPE)
+		{
+			real sx = GenerateUnitRandomReal()*1.0f;
+			real sy = GenerateUnitRandomReal()*1.0f;
+			real sz = GenerateUnitRandomReal()*1.0f;
+			sx = VALUE_MAX(sx, 0.4f);
+			sy = VALUE_MAX(sy, 0.4f);
+			sz = VALUE_MAX(sz, 0.4f);
+
+			Body.size = vector3D(sx, sy, sz);
+			Body.radius = Body.size.length();
+
+			real Density = real(1.0f);
+			real Mass = real(8)*Density*sx*sy*sz;
+			assert(Mass > real(0));
+
+			Body.setMass(Mass);
+			//factor 3 becouse "size" is half of the whole extent
+			Body.InverseLocalInertiaTensor(0, 0) = real(3) / (Mass*(sy*sy + sz * sz));
+			Body.InverseLocalInertiaTensor(1, 1) = real(3) / (Mass*(sx*sx + sz * sz));
+			Body.InverseLocalInertiaTensor(2, 2) = real(3) / (Mass*(sx*sx + sy * sy));
+
+			Body.restitution = restitution;
+			Body.friction = friction;
+			Body.color[0] = GenerateUnitRandomReal()*.7f + .3f;//dont want dark objects
+			Body.color[1] = GenerateUnitRandomReal()*.7f + .3f;
+			Body.color[2] = GenerateUnitRandomReal()*.7f + .3f;
+			//TODO:  should store fixed color as we want user can change it dynamically
+			currentRender->StoreBox(storedBoxes++, Body.color, sx,sy,sz);
+		}
+		else if( Body.shape==SPHERE_SHAPE)
 		{
 			real radius = GenerateUnitRandomReal()*1.0f;
 //			if( radius < 0.95f)radius=0.3f;
@@ -109,18 +149,14 @@ void dynamic_world::BuildBodies( void )
 
 			Body.restitution =restitution;
 			Body.friction = friction;
-			Body.color[0]=GenerateUnitRandomReal();
-			Body.color[1]=GenerateUnitRandomReal();
-			Body.color[2]=GenerateUnitRandomReal();
-			Body.backupcolor[0]=Body.color[0];
-			Body.backupcolor[1]=Body.color[1];
-			Body.backupcolor[2]=Body.color[2];
+			Body.color[0] = GenerateUnitRandomReal()*.7f + .3f;//dont want dark objects
+			Body.color[1] = GenerateUnitRandomReal()*.7f + .3f;
+			Body.color[2] = GenerateUnitRandomReal()*.7f + .3f;
 		}
-		else
-		{
-			ASSERT( strlen(" ERROR: BOX_SHAPE not supported in this version!\n")==0 );
-		}
-    }
+		Body.backupcolor[0]=Body.color[0];
+		Body.backupcolor[1]=Body.color[1];
+		Body.backupcolor[2]=Body.color[2];
+	}
 
 }
 void  dynamic_world::IntitilizeBodiesInWorld()
@@ -173,6 +209,12 @@ void  dynamic_world::IntitilizeBodiesInWorld()
                 Transpose(Source.Orientation);
 
 		Target = Source;
+
+		bodies[i].color[0]=bodies[i].backupcolor[0];
+		bodies[i].color[1]=bodies[i].backupcolor[1];
+		bodies[i].color[2]=bodies[i].backupcolor[2];
+
+		bodies[i]. awake();
 	}
 }
 
@@ -181,27 +223,26 @@ void dynamic_world::Render( void )
 {
 	currentRender->clearBoxTransformList();
 	currentRender->clearSphereTransformList();
-    for(int i=0; i < NumberOfBodies;i++)
-    {
-        matrix3D& Orientation = bodies[i].dynamicState[CurrentState].Orientation;
-        vector3D& CMPosition = bodies[i].dynamicState[CurrentState].CMPosition;
+	for (int i = 0; i < NumberOfBodies; i++)
+	{
+		matrix3D& Orientation = bodies[i].dynamicState[CurrentState].Orientation;
+		vector3D& CMPosition = bodies[i].dynamicState[CurrentState].CMPosition;
 
 		thkTransform myGlTransform;
-        BuildOpenGLTransformMatrix(Orientation,CMPosition,myGlTransform.aM);
-		//if( bodies[i].shape==BOX_SHAPE)
-		//{
-		//	currentRender->addBoxTransform( myGlTransform);
-		//}
-		//else
-		if( bodies[i].shape==SPHERE_SHAPE)
+		BuildOpenGLTransformMatrix(Orientation, CMPosition, myGlTransform.aM);
+		if (bodies[i].shape == BOX_SHAPE)
 		{
-			myGlTransform.radius=bodies[i].radius;
-			myGlTransform.color[0]=bodies[i].color[0];
-			myGlTransform.color[1]=bodies[i].color[1];
-			myGlTransform.color[2]=bodies[i].color[2];
-			currentRender->addSphereTransform( myGlTransform);
-//			currentRender->addBoxTransform( myGlTransform);
+			currentRender->addBoxTransform(myGlTransform);
 		}
+		else
+			if (bodies[i].shape == SPHERE_SHAPE)
+			{
+				myGlTransform.radius = bodies[i].radius;
+				myGlTransform.color[0] = bodies[i].color[0];
+				myGlTransform.color[1] = bodies[i].color[1];
+				myGlTransform.color[2] = bodies[i].color[2];
+				currentRender->addSphereTransform(myGlTransform);
+			}
 	}
 	if( currentRender->bDrawCollisionInfo)
 	{
@@ -263,6 +304,12 @@ void dynamic_world::ApplyForces( int state )
     for(int i = 0;i < NumberOfBodies;i++)
     {
         rigid_body &Body = bodies[i];
+
+		if( Body.isSleeping())
+		{
+			continue;
+		}
+
         rigid_body::DynamicState &dynState = Body.dynamicState[state];
 
         // clear forces
@@ -287,6 +334,7 @@ void dynamic_world::UpdateCurrentState()
     for(int i = 0;i < NumberOfBodies;i++)
     {
         rigid_body &Body = bodies[i];
+
         rigid_body::DynamicState &dynamicState0 = Body.dynamicState[CurrentState];
         rigid_body::DynamicState &dynamicState1 = Body.dynamicState[TargetState];
 
@@ -305,11 +353,17 @@ void dynamic_world::Integrate( real DeltaTime )
 
     for(int i= 0;i < NumberOfBodies;i++)
     {
-        rigid_body::DynamicState &Source =bodies[i].dynamicState[CurrentState];
-        rigid_body::DynamicState &Target =bodies[i].dynamicState[TargetState];
+        rigid_body &Body = bodies[i];
 
-		//TODO: try forward-backward Euler scheme
-		//Euler integration uses current velocity, more accurrate
+		if( Body.isSleeping())
+		{
+			continue;
+		}
+
+        rigid_body::DynamicState &Source = Body.dynamicState[CurrentState];
+        rigid_body::DynamicState &Target = Body.dynamicState[TargetState];
+
+		//Forward Euler integration uses current velocity, inacurrate
         Target.CMPosition = Source.CMPosition +
                 DeltaTime * Source.CMVelocity;
 
@@ -317,7 +371,7 @@ void dynamic_world::Integrate( real DeltaTime )
                 (DeltaTime * bodies[i].getInvMass()) * Source.CMForce;
 		Target.CMVelocity *=(1.0f - airFriction);
 
-		//direct intgation uses next velocity
+		//forward-backward uses next velocity, more accurate
 //		Target.CMPosition = Source.CMPosition +
 //                DeltaTime * Target.CMVelocity;
 
@@ -363,9 +417,47 @@ dynamic_world::collision_state dynamic_world::CheckForWallCollisions( int state 
 		for(int BodyIndex = 0;(BodyIndex < NumberOfBodies) ;BodyIndex++)
 		{
 			rigid_body &Body = bodies[BodyIndex];
-			rigid_body::DynamicState &dynamicState =
-					Body.dynamicState[state];
 
+			if( Body.isSleeping())
+			{
+				continue;
+			}
+
+			rigid_body::DynamicState &dynamicState = Body.dynamicState[state];
+
+			if (Body.shape == BOX_SHAPE)
+			{
+				vector3D worldBoundingVertices[8];
+				Bbox bbox(dynamicState.Orientation, dynamicState.CMPosition, Body.size);
+				box2vertex(bbox, worldBoundingVertices);
+				for (int unsigned i = 0; (i < 8); i++)
+				{
+					vector3D col_point = worldBoundingVertices[i];
+					vector3D R = col_point - dynamicState.CMPosition;
+
+					real penetration = Dot(col_point - Wall.pos, Wall.Normal);
+					if (penetration < DepthEpsilon)
+					{
+						CollisionState = Colliding;
+						//prevent interpenetration with ground
+						if (walls[WallIndex].Normal.getZ() > 0.99f)
+							dynamicState.CMPosition -= penetration * walls[WallIndex].Normal;
+
+						collision_pair* pair = new collision_pair;
+						if (pair)
+						{
+							pair->body1Index = BodyIndex;
+							pair->body2Index = -1;
+							pair->normal[0] = walls[WallIndex].Normal;
+							pair->point[0] = col_point;
+							pair->nPoints = 1;
+							pair->wall_Index = WallIndex;
+						}
+						activePairs.push_back(pair);
+					}
+				}
+			}
+			else
 			if( Body.shape==SPHERE_SHAPE)		
 			{
 				vector3D col_point = dynamicState.CMPosition -
@@ -405,6 +497,7 @@ dynamic_world::collision_state dynamic_world::CheckForInterCollisions( int state
     for(int BodyIndex1 = 0;(BodyIndex1 < NumberOfBodies) ;BodyIndex1++)
     {
         rigid_body &Body1 = bodies[BodyIndex1];
+
         rigid_body::DynamicState &dynamicState1 =
                 Body1.dynamicState[state];
 		Bbox bbox1(dynamicState1.Orientation,dynamicState1.CMPosition,Body1.size);
@@ -412,30 +505,80 @@ dynamic_world::collision_state dynamic_world::CheckForInterCollisions( int state
 		for (int BodyIndex2 = BodyIndex1 + 1; (BodyIndex2 < NumberOfBodies); BodyIndex2++)
 		{
 			rigid_body &Body2 = bodies[BodyIndex2];
-			rigid_body::DynamicState &dynamicState2 =
-				Body2.dynamicState[state];
+
+			if( Body1.isSleeping() && Body2.isSleeping())
+			{
+				continue;
+			}
+
+			rigid_body::DynamicState &dynamicState2 = Body2.dynamicState[state];
 			Bbox bbox2(dynamicState2.Orientation, dynamicState2.CMPosition, Body2.size);
 
-			if (Body1.shape == SPHERE_SHAPE && Body2.shape == SPHERE_SHAPE)
+			if( Body1.shape==SPHERE_SHAPE && Body2.shape==SPHERE_SHAPE)		
 			{
 				//Spheres detection
 				vector3D dist = dynamicState1.CMPosition - dynamicState2.CMPosition;
 				real min_dist = (Body1.radius + Body2.radius);
-				if (dist.squaredLength() < (min_dist*min_dist))
-				{
+				if( dist.squaredLength() < (min_dist*min_dist))
+				{		
 					CollisionState = Colliding;
 					collision_pair* pair = new collision_pair;
-					if (pair)
+					if( pair)
 					{
-						pair->body1Index = BodyIndex1;
-						pair->body2Index = BodyIndex2;
+						pair->body1Index=BodyIndex1;
+						pair->body2Index=BodyIndex2;
 						pair->normal[0] = dist.normalize();
-						pair->point[0] = dynamicState1.CMPosition - (pair->normal[0] * Body1.radius);
-						pair->nPoints = 1;
+						pair->point[0] = dynamicState1.CMPosition - (pair->normal[0]*Body1.radius);
+						pair->nPoints=1;
 						pair->wall_Index = -1;
 					}
 					activePairs.push_back(pair);
 				}
+			}
+			else
+			if (Body1.shape == BOX_SHAPE && Body2.shape == BOX_SHAPE)
+			{
+				//box detection
+				if (boxTestBox(bbox1, bbox2))
+				{
+					int nPoints = 0;
+					vector3D col_point[16];
+					vector3D col_normal[16];
+					if (boxFindBox(bbox1, bbox2, col_point, col_normal, nPoints))
+					{
+						CollisionState = Colliding;
+						collision_pair* pair = new collision_pair;
+						if (pair)
+						{
+							pair->body1Index = BodyIndex1;
+							pair->body2Index = BodyIndex2;
+							int num = VALUE_MIN(nPoints, 16);
+							for (int j = 0; j < num; j++)
+							{
+								pair->normal[j] = col_normal[j];
+								pair->point[j] = col_point[j];
+							}
+							pair->nPoints = nPoints;
+							pair->wall_Index = -1;
+							activePairs.push_back(pair);
+							last_col_point[0] = pair->point[0];
+							last_col_normal[0] = pair->normal[0];
+						}
+					}
+				}
+			}
+			else
+			{
+				//sphere-box collision
+				/*practica : USAR los metodos 
+
+					bool SphereTestBox(const vector3D& center, const real radius, const Bbox& q);
+					bool SphereFindBox(const vector3D& center, const real radius, const Bbox& q, vector3D&col_point, vector3D& col_normal);
+
+					para implementar collision de esferas y cajas, basandose en las implementacion de arriba
+
+				*/
+
 			}
 		}
 	}
@@ -490,7 +633,7 @@ void dynamic_world::ResolveCollisions( int dynamicStateIndex )
 			dynamicState.AngularVelocity = dynamicState.InverseWorldInertiaTensor *
 				dynamicState.AngularMomentum;
 
-
+			 
 			if( FrictionActive)
 			{
 				// apply friction			
@@ -676,6 +819,22 @@ rigid_body* dynamic_world::getFirstHitBody(const vector3D pos, const vector3D di
 				}
 			}
 		}
+		else
+		if(  Body.shape==BOX_SHAPE)
+		{
+			Bbox bbox(dynamicState.Orientation,dynamicState.CMPosition,Body.size);
+
+			if(rayfindBox (pos, dir, bbox, numHits,hits))
+			{
+				hitDist = (hits[0]-pos).squaredLength();
+				if( hitDist  <  nearDist)
+				{
+					hitBody = &Body;
+					nearDist = hitDist;
+				}
+			}
+		}
+
 	}
 	if( hitBody)
 	{
@@ -685,10 +844,29 @@ rigid_body* dynamic_world::getFirstHitBody(const vector3D pos, const vector3D di
 	return hitBody;
 }
 
+void dynamic_world::updateSleepingBodies( int state )
+{
+	static int counter = 0;counter++;
+	const real theshold_sleep= 0.1f;
+	/*PRACTICA:
+	USAR rigid_body putToSleep(),awake() y isSleeping() para implementar una politica de desactivacion segun el criterio
+
+	- solidos rigidos chocando con el suelo con energia menor que theshold_sleep se desactivan
+	- solidos rigidosdesactivados  chocando con otro activo se activan siempre
+
+	-la formula para saber la nergia del solido es:
+
+	real bodySpeedEnergy = dynamicState.CMVelocity.squaredLength()  + dynamicState.AngularVelocity.squaredLength();
+
+	*/
+}
+
 void dynamic_world::Step( real DeltaTime )
 {
     real CurrentTime = real(0);
     real TargetTime = DeltaTime;
+
+	updateSleepingBodies( CurrentState);
 
 		//move bodies
     ApplyForces(CurrentState);

@@ -40,9 +40,10 @@ struct rigid_body
     matrix3D InverseLocalInertiaTensor;
     real restitution;
     real friction;	
+	bool sleepingState;
 
     struct DynamicState
-    {
+	{
 		//variable dynamic properties
         vector3D CMPosition;
         matrix3D Orientation;
@@ -70,6 +71,20 @@ struct rigid_body
 	    dynamicState[state].AngularVelocity =  dynamicState[state].InverseWorldInertiaTensor * dynamicState[state].AngularMomentum;
     }
 
+	//sleep methods
+	void putToSleep(){ 
+		sleepingState=true;
+		color[0] = 0.0f;
+		color[1] = 0.0f;
+		color[2] = 0.0f;
+	}
+	void awake(){ 
+		sleepingState=false;
+		color[0]=backupcolor[0];
+		color[1]=backupcolor[1];
+		color[2]=backupcolor[2];
+	}
+	bool isSleeping(){ return (sleepingState==true);}
 
 };
 
@@ -85,7 +100,7 @@ struct collision_pair
 
 const     int CurrentState=0;
 const     int TargetState=1;
-const     int NumberOfBodies = 32;//16;
+const     int NumberOfBodies =  20;
 	
 class dynamic_world
 {
@@ -119,6 +134,7 @@ private:
     } CollisionState;	
 
 
+    void updateSleepingBodies( int state );
     void ApplyForces( int state );
     void Integrate( real DeltaTime );
     void UpdateCurrentState();

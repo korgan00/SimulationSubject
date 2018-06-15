@@ -37,7 +37,7 @@ int FrictionActive = 1;
 const float restitution=0.7f;
 const float friction=0.3f;
 
-//NOTE: this is actually the accelaration of gavity in m/s2 , 
+//NOTE: this is actually the accelaration of gavity in m/s2, 
 // gravity force is G=g*M
 vector3D gravity(real(0),real(0),real(-20));
         
@@ -109,9 +109,9 @@ void dynamic_world::BuildBodies( void )
 
 			Body.restitution =restitution;
 			Body.friction = friction;
-			Body.color[0]=GenerateUnitRandomReal();
-			Body.color[1]=GenerateUnitRandomReal();
-			Body.color[2]=GenerateUnitRandomReal();
+			Body.color[0] = GenerateUnitRandomReal()*.7f + .3f;//dont want dark objects
+			Body.color[1] = GenerateUnitRandomReal()*.7f + .3f;
+			Body.color[2] = GenerateUnitRandomReal()*.7f + .3f;
 			Body.backupcolor[0]=Body.color[0];
 			Body.backupcolor[1]=Body.color[1];
 			Body.backupcolor[2]=Body.color[2];
@@ -277,7 +277,7 @@ void dynamic_world::ApplyForces( int state )
         }
 
 		//wind
-//		dynState.CMForce += vector3D(50,0,0);
+//		dynState.CMForce += vector3D(5,0,0);
 
     }
 }   
@@ -308,8 +308,7 @@ void dynamic_world::Integrate( real DeltaTime )
         rigid_body::DynamicState &Source =bodies[i].dynamicState[CurrentState];
         rigid_body::DynamicState &Target =bodies[i].dynamicState[TargetState];
 
-		//TODO: try forward-backward Euler scheme
-		//Euler integration uses current velocity, more accurrate
+		//Forward Euler integration uses current velocity, inacurrate
         Target.CMPosition = Source.CMPosition +
                 DeltaTime * Source.CMVelocity;
 
@@ -317,9 +316,9 @@ void dynamic_world::Integrate( real DeltaTime )
                 (DeltaTime * bodies[i].getInvMass()) * Source.CMForce;
 		Target.CMVelocity *=(1.0f - airFriction);
 
-		//direct intgation uses next velocity
-//		Target.CMPosition = Source.CMPosition +
-//                DeltaTime * Target.CMVelocity;
+		//forward-backward uses next velocity, more accurate
+		//Target.CMPosition = Source.CMPosition +
+  //              DeltaTime * Target.CMVelocity;
 
         Target.Orientation = Source.Orientation +
                 DeltaTime *
@@ -407,14 +406,12 @@ dynamic_world::collision_state dynamic_world::CheckForInterCollisions( int state
         rigid_body &Body1 = bodies[BodyIndex1];
         rigid_body::DynamicState &dynamicState1 =
                 Body1.dynamicState[state];
-		Bbox bbox1(dynamicState1.Orientation,dynamicState1.CMPosition,Body1.size);
 
 		for (int BodyIndex2 = BodyIndex1 + 1; (BodyIndex2 < NumberOfBodies); BodyIndex2++)
 		{
 			rigid_body &Body2 = bodies[BodyIndex2];
 			rigid_body::DynamicState &dynamicState2 =
 				Body2.dynamicState[state];
-			Bbox bbox2(dynamicState2.Orientation, dynamicState2.CMPosition, Body2.size);
 
 			if (Body1.shape == SPHERE_SHAPE && Body2.shape == SPHERE_SHAPE)
 			{
@@ -490,15 +487,15 @@ void dynamic_world::ResolveCollisions( int dynamicStateIndex )
 			dynamicState.AngularVelocity = dynamicState.InverseWorldInertiaTensor *
 				dynamicState.AngularMomentum;
 
-
 			if( FrictionActive)
 			{
-				// apply friction			
-				Velocity = dynamicState.CMVelocity +
-					CrossProduct(dynamicState.AngularVelocity,R);
+				Velocity = dynamicState.CMVelocity + CrossProduct(dynamicState.AngularVelocity,R);
+
 				vector3D tand = Velocity - Dot(Velocity,col_normal)*col_normal;
-				tand.normalize();
+				if(tand.squaredLength() > Epsilon)//no friction if bodies arent actually sliding each other
 				{
+					// apply friction			
+					tand.normalize();
 					Impulse = -Body.friction *impn * tand;
 					// apply impulse to primary quantities
 					dynamicState.CMVelocity += Body.getInvMass() * Impulse;

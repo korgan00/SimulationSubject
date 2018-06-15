@@ -1,0 +1,37 @@
+/*----------------------------------------------------------------------------
+3D Physics Demo By Carlos Pegar
+*/
+
+#include "windows.h"
+#include "winInit.h"
+
+AppIcon  ICON   AppIcon.ico
+
+AppAbout DIALOG DISCARDABLE  100, 100, 255, 86
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,5,65,50,14
+    LTEXT           "3D Physics Demo By Carlos Pegar",
+                    -1,5,5,250,8
+    LTEXT           "(c)2017 Thinkinetic",-1,5,15,150,8
+    LTEXT           "http://www.pulldownit.com",-1,5,25,250,8
+    LTEXT           "http://www.thinkinetic.com",-1,5,40,250,8
+        ICON                    "AppIcon",-1,225,30,0,0
+END
+
+AppMenu menu
+begin
+        POPUP "                                                                                                          "
+        BEGIN
+                MENUITEM " ",      UI_ABOUT
+        END
+
+        POPUP "&3D Physics Demo"
+        BEGIN
+                MENUITEM "&About",      UI_ABOUT
+                MENUITEM "&Exit",       UI_EXIT
+        END
+end
+

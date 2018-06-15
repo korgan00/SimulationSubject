@@ -15,10 +15,6 @@
 #include "physics3D.h"
 #include "logout.h"
 
-#define FIXEDTIMESTEP 1
-const float FPS = 25;
-const int substep = 5;
-
 extern int unsigned WindowWidth;
 extern int unsigned WindowHeight;
 extern int GravityActive;
@@ -82,16 +78,24 @@ void selectObjectAtPoint( int xpos, int ypos)
 	if( hitbody)
 	{
 		//push the body
+		if(hitbody->isSleeping())
+		{
+			hitbody->awake();
+		}
 		hitbody->applyImpulse(dir*25.0f, hitpoint, 0);
 	}
 
 }
+
+#define FIXEDTIMESTEP 1
 
 void Execute(float zoom, float height, float angle)
 {
 	static int counter=0;
 	counter++;
 
+	const float FPS = 60;//lets set our default refresh to 60 hz, so smooth
+	const int substep = 5;
 
 	assert(pWorld);
 	pWorld->getRender()->clearView(zoom, height, angle);
@@ -100,25 +104,26 @@ void Execute(float zoom, float height, float angle)
 
 	real const dt = 1.0f / (substep*FPS);
 
-#undef FIXEDTIMESTEP
-
 #ifdef FIXEDTIMESTEP
 	real Time = LastTime;
 	
-	pWorld->Step(dt);
+	for (int i = 0; i < substep; i++)
+	{
+		pWorld->Step(dt);
 
-	LastTime = Time + dt;
+		LastTime = Time + dt;
+	}
 
 #else
 	real Time = GetTime();
 	real elapsed_dt = Time - LastTime;	
+//	pWorld->Step(elapsed_dt);
 	int ite = (int)(elapsed_dt / dt);
 	real last_dt = elapsed_dt - ite*dt;
 	for (int i = 0; i < ite; i++) pWorld->Step(dt);
 	if(last_dt > Epsilon)pWorld->Step(last_dt);
-
 	LOGOUT( logstr, " counter %d elapsed_dt %.3f last_dt %.3f ite %d \n", counter, elapsed_dt, last_dt, ite);
-//	pWorld->printDT( elapsed_dt, ite );
+	pWorld->printDT( elapsed_dt, ite );
 
 	LastTime = GetTime();
 
