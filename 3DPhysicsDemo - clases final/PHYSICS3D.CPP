@@ -232,6 +232,9 @@ void dynamic_world::Render( void )
 		BuildOpenGLTransformMatrix(Orientation, CMPosition, myGlTransform.aM);
 		if (bodies[i].shape == BOX_SHAPE)
 		{
+            myGlTransform.color[0] = bodies[i].color[0];
+            myGlTransform.color[1] = bodies[i].color[1];
+            myGlTransform.color[2] = bodies[i].color[2];
 			currentRender->addBoxTransform(myGlTransform);
 		}
 		else
@@ -498,8 +501,7 @@ dynamic_world::collision_state dynamic_world::CheckForInterCollisions( int state
     {
         rigid_body &Body1 = bodies[BodyIndex1];
 
-        rigid_body::DynamicState &dynamicState1 =
-                Body1.dynamicState[state];
+        rigid_body::DynamicState &dynamicState1 = Body1.dynamicState[state];
 		Bbox bbox1(dynamicState1.Orientation,dynamicState1.CMPosition,Body1.size);
 
 		for (int BodyIndex2 = BodyIndex1 + 1; (BodyIndex2 < NumberOfBodies); BodyIndex2++)
@@ -578,6 +580,27 @@ dynamic_world::collision_state dynamic_world::CheckForInterCollisions( int state
 					para implementar collision de esferas y cajas, basandose en las implementacion de arriba
 
 				*/
+                // making difference between sphere and box
+                bool b1IsSphere = Body1.shape == SPHERE_SHAPE;
+                rigid_body &sphere = b1IsSphere ? Body1 : Body2;
+                Bbox &boxBbox = !b1IsSphere ? bbox1 : bbox2;
+                rigid_body::DynamicState &sphereDynamicState = sphere.dynamicState[state];
+
+                // testing
+                if (SphereTestBox(sphereDynamicState.CMPosition, sphere.radius, boxBbox)) {
+                    CollisionState = collision_state::Colliding;
+
+                    collision_pair* collisionPair = new collision_pair();
+                    collisionPair->body1Index = b1IsSphere ? BodyIndex1 : BodyIndex2;
+                    collisionPair->body2Index = !b1IsSphere ? BodyIndex1 : BodyIndex2;
+
+                    if (SphereFindBox(sphereDynamicState.CMPosition, sphere.radius, boxBbox, collisionPair->point[0], collisionPair->normal[0])) {
+                        collisionPair->nPoints = 1;
+                        collisionPair->wall_Index = -1;
+
+                        activePairs.push_back(collisionPair);
+                    }
+                }
 
 			}
 		}
@@ -847,18 +870,55 @@ rigid_body* dynamic_world::getFirstHitBody(const vector3D pos, const vector3D di
 void dynamic_world::updateSleepingBodies( int state )
 {
 	static int counter = 0;counter++;
+
 	const real theshold_sleep= 0.1f;
 	/*PRACTICA:
 	USAR rigid_body putToSleep(),awake() y isSleeping() para implementar una politica de desactivacion segun el criterio
 
 	- solidos rigidos chocando con el suelo con energia menor que theshold_sleep se desactivan
-	- solidos rigidosdesactivados  chocando con otro activo se activan siempre
+	- solidos rigidos desactivados chocando con otro activo se activan siempre
 
 	-la formula para saber la nergia del solido es:
 
-	real bodySpeedEnergy = dynamicState.CMVelocity.squaredLength()  + dynamicState.AngularVelocity.squaredLength();
+	real bodySpeedEnergy = dynamicState.CMVelocity.squaredLength() + dynamicState.AngularVelocity.squaredLength();
 
+    --------------------------------------------------------------------------------------------------------------------
+
+    para que desactive los solidos rigidos con poca energia cinetica, los solidos desactivados se volveran de color negro
+    (esto ya esta hecho en la funcion putToSleep()) lo que teneis que implementar es la logica para desactivarlos.
+    las instrucciones estan dentro del mismo metodo.
+
+    PISTA: para saber que pared es el suelo podemos chequear su normal que es (0,0,1)  las otras paredes tendran otra distinta.
+    
 	*/
+    for (collision_pair* collisionPair : activePairs) {
+        rigid_body &body1 = bodies[collisionPair->body1Index];
+        rigid_body &body2 = bodies[collisionPair->body2Index];
+
+        // check for wall collision
+        int wallIdx = collisionPair->wall_Index;
+        if (wallIdx >= 0) {
+            vector3D wallNormal = walls[wallIdx].Normal;
+            // check for floor wall
+            if (wallNormal.getX() == 0.0f && wallNormal.getY() == 0.0f && wallNormal.getZ() == 1.0f) {
+
+                rigid_body::DynamicState &dynamicState = body1.dynamicState[state];
+                real bodySpeedEnergy = dynamicState.CMVelocity.squaredLength() + dynamicState.AngularVelocity.squaredLength();
+
+                if (bodySpeedEnergy < theshold_sleep) {
+                    body1.putToSleep();
+                } else if (body1.isSleeping()) {
+                    body1.awake();
+                }
+            }
+        // check for body to body collision
+        } else if (body1.isSleeping() && !body2.isSleeping()) { // 1º sleep, 2º awake
+            body1.awake();
+        } else if (body2.isSleeping() && !body1.isSleeping()) { // 1º awake, 2º sleep
+            body2.awake();
+        } // if both are awake, is not necessary to awake,
+          // if both are spleeping, no one awakes others
+    }
 }
 
 void dynamic_world::Step( real DeltaTime )
