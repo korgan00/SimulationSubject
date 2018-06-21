@@ -1,0 +1,23 @@
+﻿Build started 13/06/2018 21:55:26.
+     1>Project "E:\VCProjects\supportProjects\ChrisHecker\3DPhysicsDemo\3DPhysicsDemo -clases\vs2012Project\vs2010Project\vs2010Project.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I"E:\VCProjects\supportProjects\ChrisHecker\3DPhysicsDemo\3DPhysicsDemo -clases\vs2012Project\\Glut\GL" /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\MAIN.CPP ..\..\PHYSICS3D.CPP
+         MAIN.CPP
+     1>e:\vcprojects\supportprojects\chrishecker\3dphysicsdemo\3dphysicsdemo -clases\main.cpp(70): warning C4244: 'argument' : conversion from 'double' to 'real', possible loss of data
+     1>e:\vcprojects\supportprojects\chrishecker\3dphysicsdemo\3dphysicsdemo -clases\main.cpp(71): warning C4244: 'argument' : conversion from 'double' to 'real', possible loss of data
+         Generating Code...
+         Compiling...
+         PHYSICS3D.CPP
+         Generating Code...
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"E:\VCProjects\supportProjects\ChrisHecker\3DPhysicsDemo\3DPhysicsDemo -clases\vs2012Project\Debug\PhysicsDemoByCarlosPegar.exe" /INCREMENTAL /NOLOGO /LIBPATH:"E:\VCProjects\supportProjects\ChrisHecker\3DPhysicsDemo\3DPhysicsDemo -clases\vs2012Project\\Glut" /LIBPATH:"E:\VCProjects\supportProjects\ChrisHecker\3DPhysicsDemo\3DPhysicsDemo -clases\vs2012Project\\Debug" winmm.lib opengl32.lib glu32.lib glut32.lib thinkGlite.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:\VCProjects\supportProjects\ChrisHecker\3DPhysicsDemo\3DPhysicsDemo -clases\vs2012Project\Debug\PhysicsDemoByCarlosPegar.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:\VCProjects\supportProjects\ChrisHecker\3DPhysicsDemo\3DPhysicsDemo -clases\vs2012Project\Debug\PhysicsDemoByCarlosPegar.lib" /MACHINE:X86 Debug\PHYSICS.res
+         Debug\GEO3D.obj
+         Debug\MAIN.obj
+         Debug\PHYSICS3D.obj
+         Debug\WINSYS.obj
+         vs2010Project.vcxproj -> E:\VCProjects\supportProjects\ChrisHecker\3DPhysicsDemo\3DPhysicsDemo -clases\vs2012Project\Debug\PhysicsDemoByCarlosPegar.exe
+     1>Done Building Project "E:\VCProjects\supportProjects\ChrisHecker\3DPhysicsDemo\3DPhysicsDemo -clases\vs2012Project\vs2010Project\vs2010Project.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:02.57
